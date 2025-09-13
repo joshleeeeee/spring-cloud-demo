@@ -3,6 +3,7 @@ import java.math.BigDecimal;
 import java.util.List;
 
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cloud.client.ServiceInstance;
@@ -11,6 +12,7 @@ import org.springframework.cloud.client.loadbalancer.LoadBalancerClient;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import xyz.ljosh.order.bean.Order;
+import xyz.ljosh.order.feign.ProductFeignClient;
 import xyz.ljosh.order.service.OrderService;
 import xyz.ljosh.product.bean.Product;
 
@@ -20,25 +22,26 @@ import xyz.ljosh.product.bean.Product;
  */
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
 
 
     private final DiscoveryClient discoveryClient;
+
     private final RestTemplate restTemplate;
+
     private final LoadBalancerClient loadBalancerClient;
 
-    public OrderServiceImpl(@Qualifier("compositeDiscoveryClient") DiscoveryClient discoveryClient, RestTemplate restTemplate, LoadBalancerClient loadBalancerClient) {
-        this.discoveryClient = discoveryClient;
-        this.restTemplate = restTemplate;
-        this.loadBalancerClient = loadBalancerClient;
-    }
+    private final ProductFeignClient productFeignClient;
+
 
     @Override
     public Order createOrder(Long productId, Long userId) {
         // 根据商品 id 查询商品信息
 //        Product product = this.getProductFromRemote(productId);
 //        Product product = this.getProductFromRemoteWithLB(productId);
-        Product product = this.getProductFromRemoteWithLBAnnotation(productId);
+//        Product product = this.getProductFromRemoteWithLBAnnotation(productId);
+        Product product = productFeignClient.getProduct(productId);
 
         Order order = new Order();
         order.setId(1L);
